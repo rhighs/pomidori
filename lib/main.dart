@@ -8,7 +8,7 @@ import 'package:vibration/vibration.dart';
 
 const int DEFAULT_SESSION_MINUTES = 25;
 const int DEFAULT_BREAK_MINUTES = 5;
-const int MINUTE = 1;
+const int MINUTE = 60;
 
 void main() => runApp(const MyApp());
 
