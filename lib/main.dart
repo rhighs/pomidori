@@ -10,7 +10,7 @@ const int DEFAULT_SESSION_MINUTES = 25;
 const int DEFAULT_BREAK_MINUTES = 5;
 const int MINUTE = 1;
 
-void main() => runApp(MyApp());
+void main() => runApp(const MyApp());
 
 enum TimerState {
   sessionTime,
@@ -257,7 +257,7 @@ class _PomidoriTimerState extends State<PomidoriTimer>
             },
             onDoubleTap: () {
               HapticFeedback.heavyImpact();
-              _toggleBreak()
+              _toggleBreak();
             },
             onLongPress: () {
               HapticFeedback.heavyImpact();
