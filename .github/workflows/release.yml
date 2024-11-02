@@ -2,10 +2,6 @@ name: Build and Upload APK
 
 on:
   workflow_dispatch:
-    inputs:
-      version:
-        description: "Release version"
-        required: true
 
 jobs:
   build:
@@ -13,10 +9,10 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Set up Java 17
-        uses: actions/setup-java@v2
+        uses: actions/setup-java@v3
         with:
           distribution: "temurin"
           java-version: "17"
@@ -26,7 +22,7 @@ jobs:
         with:
           flutter-version: "3.24.4"
 
-      - name: Show flutter version
+      - name: Show Flutter version
         run: flutter --version
 
       - name: Install dependencies
@@ -48,10 +44,10 @@ jobs:
       - name: Upload APK to GitHub Release
         uses: ncipollo/release-action@v1
         with:
-          artifacts: "build/app/outputs/flutter-apk/pomidori-release-$VERSION.apk"
+          artifacts: "build/app/outputs/flutter-apk/pomidori-release-${{ env.VERSION }}.apk"
           token: ${{ secrets.GITHUB_TOKEN }}
-          tag: $VERSION
-          name: "Pomidori Release v$VERSION"
-          body: "Release action for version v$VERSION"
+          tag: ${{ env.VERSION }}
+          name: "Pomidori Release v${{ env.VERSION }}"
+          body: "Release action for version v${{ env.VERSION }}"
           draft: false
           prerelease: false
