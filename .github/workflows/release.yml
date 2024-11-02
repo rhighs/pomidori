@@ -1,0 +1,46 @@
+name: Build and Upload APK
+
+on:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: "stable"
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Extract version from pubspec.yaml
+        id: extract_version
+        run: |
+          VERSION=$(grep '^version: ' pubspec.yaml | sed 's/version: //')
+          echo "version=$VERSION" >> $GITHUB_ENV
+
+      - name: Build APK
+        run: flutter build apk --release
+
+      - name: Rename APK with version
+        run: |
+          mv build/app/outputs/flutter-apk/app-release.apk build/app/outputs/flutter-apk/pomidori-release-$VERSION.apk
+
+      - name: Upload APK to GitHub Release
+        uses: ncipollo/release-action@v1
+        with:
+          artifacts: "build/app/outputs/flutter-apk/pomidori-release-${{ env.version }}.apk"
+          token: ${{ secrets.GITHUB_TOKEN }}
+          tag: ${{ github.ref_name }}
+          name: "Release ${{ github.ref_name }}"
+          body: "Release action ${{ github.ref_name }}"
+          draft: false
+          prerelease: false
