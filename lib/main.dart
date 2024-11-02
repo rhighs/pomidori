@@ -1,10 +1,12 @@
 // ignore_for_file: constant_identifier_names
 
 import 'dart:async';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:vibration/vibration.dart';
+import 'package:just_audio/just_audio.dart';
 
 const int DEFAULT_SESSION_MINUTES = 25;
 const int DEFAULT_BREAK_MINUTES = 5;
@@ -93,6 +95,54 @@ class PomidoriTimer extends StatefulWidget {
   State<PomidoriTimer> createState() => _PomidoriTimerState();
 }
 
+class SoundBoard {
+  final AudioPlayer _pausePlayer = AudioPlayer();
+  final AudioPlayer _switchPlayer = AudioPlayer();
+  final AudioPlayer _resetPlayer = AudioPlayer();
+
+  SoundBoard() {
+    _init();
+  }
+
+  Future<void> _init() async {
+    _pausePlayer.playbackEventStream.listen((event) {},
+        onError: (Object e, StackTrace stackTrace) {
+      if (kDebugMode) {
+        print('pause_player: a stream error occurred: $e');
+      }
+    });
+    _switchPlayer.playbackEventStream.listen((event) {},
+        onError: (Object e, StackTrace stackTrace) {
+      if (kDebugMode) {
+        print('switch_player: A stream error occurred: $e');
+      }
+    });
+    _resetPlayer.playbackEventStream.listen((event) {},
+        onError: (Object e, StackTrace stackTrace) {
+      if (kDebugMode) {
+        print('reset_playre: a stream error occurred: $e');
+      }
+    });
+
+    await _pausePlayer.setAsset('assets/pomo-click.wav');
+    await _switchPlayer.setAsset('assets/pomo-switch.wav');
+    await _resetPlayer.setAsset('assets/pomo-reset.wav');
+  }
+
+  Future<void> clickSound() async =>
+      await _pausePlayer.seek(Duration.zero).then((_) => _pausePlayer.play());
+  Future<void> swtichSound() async =>
+      await _switchPlayer.seek(Duration.zero).then((_) => _switchPlayer.play());
+  Future<void> resetSound() async =>
+      await _resetPlayer.seek(Duration.zero).then((_) => _resetPlayer.play());
+
+  void dispose() {
+    _pausePlayer.dispose();
+    _switchPlayer.dispose();
+    _resetPlayer.dispose();
+  }
+}
+
 class _PomidoriTimerState extends State<PomidoriTimer>
     with SingleTickerProviderStateMixin {
   late Timer _timer;
@@ -101,6 +151,7 @@ class _PomidoriTimerState extends State<PomidoriTimer>
   int seconds = DEFAULT_SESSION_MINUTES * MINUTE;
   int sessionSeconds = DEFAULT_SESSION_MINUTES * MINUTE;
   int breakSeconds = DEFAULT_BREAK_MINUTES * MINUTE;
+  SoundBoard soundBoard = SoundBoard();
 
   @override
   void initState() {
@@ -213,6 +264,17 @@ class _PomidoriTimerState extends State<PomidoriTimer>
     );
   }
 
+  void _tapFeedback() async => await Future.wait(
+      [HapticFeedback.mediumImpact(), soundBoard.clickSound()]);
+
+  void _doubleTapFeedback() async => await Future.wait(
+      [HapticFeedback.heavyImpact(), soundBoard.swtichSound()]);
+
+  void _longPressFeedback() async => await Future.wait([
+        Vibration.vibrate(duration: 1000, amplitude: 255),
+        soundBoard.resetSound()
+      ]);
+
   @override
   Widget build(BuildContext context) {
     final AppTheme currentTheme = widget.appThemeNotifier.value;
@@ -247,20 +309,19 @@ class _PomidoriTimerState extends State<PomidoriTimer>
             onTap: () {
               if (paused) {
                 _startTimer();
-                HapticFeedback.mediumImpact();
               } else {
                 _timer.cancel();
-                HapticFeedback.mediumImpact();
               }
 
+              _tapFeedback();
               _toggleTimer();
             },
             onDoubleTap: () {
-              HapticFeedback.heavyImpact();
+              _doubleTapFeedback();
               _toggleBreak();
             },
             onLongPress: () {
-              HapticFeedback.heavyImpact();
+              _longPressFeedback();
               _resetTimer();
             },
             splashColor: Colors.white24,
