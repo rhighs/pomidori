@@ -1,7 +1,7 @@
 # Pomidori
 
 <p align="center">
-    <img src="./icon.png" width=300 />
+    <img src="./icon.png" width=100 />
 </p>
 
 The simplest pomodoro timer app ever created
