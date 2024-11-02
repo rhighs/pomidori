@@ -96,15 +96,15 @@ class PomidoriTimer extends StatefulWidget {
 class _PomidoriTimerState extends State<PomidoriTimer>
     with SingleTickerProviderStateMixin {
   late Timer _timer;
-  late int seconds = DEFAULT_SESSION_MINUTES * MINUTE;
-  bool isRunning = true;
+
+  bool paused = true;
+  int seconds = DEFAULT_SESSION_MINUTES * MINUTE;
   int sessionSeconds = DEFAULT_SESSION_MINUTES * MINUTE;
   int breakSeconds = DEFAULT_BREAK_MINUTES * MINUTE;
 
   @override
   void initState() {
     super.initState();
-    _startTimer();
     widget.timerStateNotifier.addListener(_onTimerStateChange);
   }
 
@@ -143,7 +143,7 @@ class _PomidoriTimerState extends State<PomidoriTimer>
         if (seconds < 0) {
           _timer.cancel();
           setState(() {
-            isRunning = false;
+            paused = true;
           });
           _toggleBreak();
 
@@ -169,7 +169,7 @@ class _PomidoriTimerState extends State<PomidoriTimer>
 
   void _toggleTimer() {
     setState(() {
-      isRunning = !isRunning;
+      paused = !paused;
     });
   }
 
@@ -179,7 +179,7 @@ class _PomidoriTimerState extends State<PomidoriTimer>
       seconds = widget.timerStateNotifier.value == TimerState.sessionTime
           ? sessionSeconds
           : breakSeconds;
-      isRunning = false;
+      paused = true;
     });
   }
 
@@ -245,11 +245,11 @@ class _PomidoriTimerState extends State<PomidoriTimer>
           color: Colors.transparent,
           child: InkWell(
             onTap: () {
-              if (isRunning) {
-                _timer.cancel();
+              if (paused) {
+                _startTimer();
                 HapticFeedback.mediumImpact();
               } else {
-                _startTimer();
+                _timer.cancel();
                 HapticFeedback.mediumImpact();
               }
 
@@ -284,7 +284,7 @@ class _PomidoriTimerState extends State<PomidoriTimer>
                   width: MediaQuery.of(context).size.width,
                   child: Center(
                     child: Icon(
-                      isRunning ? Icons.pause : Icons.play_arrow,
+                      paused ? Icons.play_arrow : Icons.pause,
                       color: iconColor,
                       size: 30,
                     ),
